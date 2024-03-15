@@ -1,0 +1,26 @@
+body, html, #root, .App {
+  height: 100%;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f5f5f5; /* Light grey background */
+  font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+}
+
+.App {
+  width: 100%;
+  max-width: 480px; /* Maximum width of the app area */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* Remove unused styles */
+/*.App-logo, .App-header, .App-link, @keyframes App-logo-spin {
+  display: none;
+}*/
+
+/* You might add or adjust styles here according to your needs */
