@@ -1,8 +1,13 @@
 from functools import wraps  # Facilitates the use of decorators.
 import jwt  # Facilitates encoding, decoding, and validation of JWT tokens.
 import os  # Provides a way of using operating system dependent functionality.
+import bcrypt  # Provides password hashing functions.
+import oracledb  # Additional Oracle database integration, ensure correct import if repetitive.
+from sqlalchemy.pool import NullPool  # Provides a NullPool implementation for SQLAlchemy.
 from flask import Flask, jsonify, request, abort
 from flask_cors import CORS  # Allows handling Cross Origin Resource Sharing (CORS), making cross-origin AJAX possible.
+from dotenv import load_dotenv
+load_dotenv()  # This loads the env variables from .env file if present
 
 
 # Initialize Flask app and CORS
@@ -47,3 +52,25 @@ def get_user_id_from_token(token):
         abort(401, 'Token has expired.')  # Handle expired token
     except jwt.InvalidTokenError:
         abort(401, 'Invalid token.')  # Handle invalid token
+
+# Database Credentials and Connection String
+# These variables store the database username, password, and DSN (Data Source Name) for connecting to the Oracle database.
+# It's highly recommended to manage sensitive data like usernames and passwords securely, for example, via environment variables.
+un = 'DEVELOPER'  # Database username
+pw = 'AngeleeRiosRamon1999!'  # Database password - consider using a more secure approach for production
+dsn = "(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.eu-madrid-1.oraclecloud.com))(connect_data=(service_name=gd51c296542b64f_version3_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))"
+
+# Crear un pool de conexiones a la base de datos
+pool = oracledb.create_pool(user=un, password=pw, dsn=dsn)
+
+# Configuración de SQLAlchemy para Flask
+app.config['SQLALCHEMY_DATABASE_URI'] = f'oracle+oracledb://{un}:{pw}@{dsn}'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'creator': pool.acquire,
+    'poolclass': NullPool
+}
+app.config['SQLALCHEMY_ECHO'] = True  # cambiar en prod
+
+# Inicializar la base de datos con la aplicación
+db.init_app(app)
