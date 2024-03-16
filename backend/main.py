@@ -1,3 +1,6 @@
+from functools import wraps  # Facilitates the use of decorators.
+import jwt  # Facilitates encoding, decoding, and validation of JWT tokens.
+import os  # Provides a way of using operating system dependent functionality.
 from flask import Flask, jsonify, request, abort
 from flask_cors import CORS  # Allows handling Cross Origin Resource Sharing (CORS), making cross-origin AJAX possible.
 
