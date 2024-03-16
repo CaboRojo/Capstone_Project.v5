@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 import oracledb
 from sqlalchemy.pool import NullPool
+from sqlalchemy import create_engine, Column, Integer, String, Numeric, TIMESTAMP, ForeignKey
 
 app = Flask(__name__)
 
@@ -39,6 +40,8 @@ def test_db_connectivity():
     try:
         num_users = db.session.query(User).count()
         print(f"Number of users in the database: {num_users}")
+    except oracledb.exceptions.OperationalError as e:
+        print(f"An error occurred: {e}")
     except Exception as e:
         print(f"An error occurred: {e}")
 
