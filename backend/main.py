@@ -1,7 +1,9 @@
+from models import db, User  # Import the database object from the models file.
 from functools import wraps  # Facilitates the use of decorators.
 import jwt  # Facilitates encoding, decoding, and validation of JWT tokens.
 import os  # Provides a way of using operating system dependent functionality.
-import bcrypt  # Provides password hashing functions.
+import bcrypt
+import re  # Provides password hashing functions.
 import oracledb  # Additional Oracle database integration, ensure correct import if repetitive.
 from sqlalchemy.pool import NullPool  # Provides a NullPool implementation for SQLAlchemy.
 from flask import Flask, jsonify, request, abort
@@ -74,3 +76,44 @@ app.config['SQLALCHEMY_ECHO'] = True  # cambiar en prod
 
 # Inicializar la base de datos con la aplicación
 db.init_app(app)
+
+
+# Helper Functions
+def hash_password(plain_text_password):
+    return bcrypt.hashpw(plain_text_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+def is_password_valid(password):
+    return (len(password) >= 8 and re.search("[a-z]", password) and re.search("[A-Z]", password) 
+            and re.search("[0-9]", password) and re.search("[!@#$%^&*(),.?\":{}|<>]", password))
+
+@app.route('/register', methods=['POST'])
+def register():
+    try:
+        username = request.json.get('username', '').strip()
+        password = request.json.get('password', '')
+
+        # Validate presence of username and password
+        if not username or not password:
+            return jsonify({"error": "Username and password are required"}), 400
+
+        # Validate password complexity
+        if not is_password_valid(password):
+            return jsonify({"error": "Password does not meet the complexity requirements"}), 400
+
+        # Check if username already exists
+        if User.query.filter_by(username=username).first():
+            return jsonify({"error": "Username already exists"}), 409
+
+        # Hash the password
+        hashed_password = hash_password(password)
+
+        # Create new user
+        new_user = User(username=username, hashed_password=hashed_password)
+        db.session.add(new_user)
+        db.session.commit()
+
+        return jsonify({"message": "User registered successfully"}), 201
+    except Exception as e:
+        # Log the error for debugging purposes
+        print(e)
+        return jsonify({"error": "An error occurred during registration"}), 500
