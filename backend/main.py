@@ -86,7 +86,7 @@ def is_password_valid(password):
     return (len(password) >= 8 and re.search("[a-z]", password) and re.search("[A-Z]", password) 
             and re.search("[0-9]", password) and re.search("[!@#$%^&*(),.?\":{}|<>]", password))
 
-@app.route('/register', methods=['POST'])
+@app.route('/handle_register', methods=['POST'])
 def register():
     try:
         username = request.json.get('username', '').strip()
@@ -117,3 +117,34 @@ def register():
         # Log the error for debugging purposes
         print(e)
         return jsonify({"error": "An error occurred during registration"}), 500
+
+@app.route('/handle_login', methods=['POST'])
+def login():
+    try:
+        username = request.json.get('username', '').strip()
+        password = request.json.get('password', '')
+
+        # Validate presence of username and password
+        if not username or not password:
+            return jsonify({"error": "Username and password are required"}), 400
+
+        # Fetch user by username
+        user = User.query.filter_by(username=username).first()
+        if user is None:
+            return jsonify({"error": "Invalid username or password"}), 401
+
+        # Check if the provided password matches the stored hashed password
+        if not bcrypt.checkpw(password.encode('utf-8'), user.hashed_password.encode('utf-8')):
+            return jsonify({"error": "Invalid username or password"}), 401
+
+        # Login successful
+        return jsonify({"message": "Login successful"}), 200
+    except Exception as e:
+        # Log the error for debugging purposes
+        print(e)
+        return jsonify({"error": "An error occurred during login"}), 500
+
+
+
+if __name__ == '__main__':
+    app.run(debug=True)  # Run the app in debug mode for easy development and testing
