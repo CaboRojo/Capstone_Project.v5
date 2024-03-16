@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './App.css';
-import LoginForm from './LoginForm'; // Import the LoginForm component
-import RegisterForm from './RegisterForm'; // Import the RegisterForm component
+import LoginForm from './views/forms/LoginForm';
+import RegisterForm from './views/forms/RegisterForm';
 
 function App() {
   const [view, setView] = useState('login'); // 'login' or 'register'

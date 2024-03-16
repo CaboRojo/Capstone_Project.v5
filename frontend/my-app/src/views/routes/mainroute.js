@@ -1,8 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import LoginForm from './components/LoginForm';
-import RegisterForm from './components/RegisterForm';
-import Dashboard from './components/Dashboard';
+import LoginForm from './views/forms/LoginForm';
+import RegisterForm from './views/forms/RegisterForm';
+// import Dashboard from './components/Dashboard';
 import { isAuthenticated } from '././auth'; // Function to check if user is authenticated
 
 const MainRoutes = () => {
