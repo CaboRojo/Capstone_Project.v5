@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { Card, CardContent, CardActions, TextField, Button, Typography, IconButton, InputAdornment, FormControlLabel, Checkbox, Box } from '@mui/material';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
@@ -22,40 +23,43 @@ const LoginForm = ({ onNavigateToRegister }) => {
   };
 
   const validateForm = () => {
-    if (!credentials.username) {
+    if (!credentials.username.trim()) {
       setError('Username is required.');
-      return false;
-    }
-    if (!credentials.username.includes('@')) {
-      setError('Please enter a valid email address as your username.');
       return false;
     }
     if (!credentials.password) {
       setError('Password is required.');
       return false;
     }
+    setError('');
     return true;
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setError(''); // Reset error message
-
-    if (!validateForm()) return; // Validate form and exit if validation fails
+    if (!validateForm()) return;
 
     try {
-      // Simulate authentication logic
-      console.log('Submitted:', credentials);
-      // Assuming authentication is successful
-      localStorage.setItem('authToken', 'simulated_token_from_backend');
-      if (rememberMe) {
-        console.log('Remember Me is enabled');
-      }
-      // Clear form and error states, or redirect to another page upon successful login
+      const response = await axios.post('/handle_login', credentials);
+      // Assuming the response contains a token
+      localStorage.setItem('authToken', response.data.token);
+      // Clear form upon successful authentication
       setCredentials({ username: '', password: '' });
       setRememberMe(false);
-    } catch (authError) {
-      setError('Authentication failed. Please check your credentials and try again.');
+      // Optionally navigate to a different page or show a success message
+    } catch (error) {
+      // Handle errors, e.g., show a user-friendly message
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        setError(error.response.data.message || 'Login failed. Please try again.');
+      } else if (error.request) {
+        // The request was made but no response was received
+        setError('No response from the server. Please try again later.');
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        setError('Login failed due to an unexpected error. Please try again.');
+      }
     }
   };
 

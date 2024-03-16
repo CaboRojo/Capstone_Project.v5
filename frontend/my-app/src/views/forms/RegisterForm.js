@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { Card, CardContent, TextField, Button, Typography, Box } from '@mui/material';
 
 const RegisterForm = ({ onNavigateToLogin }) => {
@@ -10,12 +11,8 @@ const RegisterForm = ({ onNavigateToLogin }) => {
   };
 
   const validateForm = () => {
-    if (!userDetails.username) {
+    if (!userDetails.username.trim()) {
       setError('Username is required.');
-      return false;
-    }
-    if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(userDetails.username)) {
-      setError('Please enter a valid email address.');
       return false;
     }
     if (!userDetails.password || userDetails.password.length < 8) {
@@ -26,24 +23,33 @@ const RegisterForm = ({ onNavigateToLogin }) => {
       setError('Password must include uppercase, lowercase, and a number.');
       return false;
     }
+    setError('');
     return true;
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setError(''); // Reset error message
 
-    if (!validateForm()) return; // Validate form and exit if validation fails
+    if (!validateForm()) return;
 
     try {
-      // Simulate registration logic
-      console.log('Registration Details:', userDetails);
-      // Assuming registration is successful, clear form
-      setUserDetails({ username: '', password: '' });
-      // Navigate to login page or show success message
-      onNavigateToLogin(); // This should be handled to show the login form
-    } catch (registrationError) {
-      setError('Registration failed. Please try again.');
+      // Here we make the Axios POST request to the registration endpoint
+      const response = await axios.post('/handle_register', userDetails);
+      // Assuming the response from the server is successful, navigate to login
+      // For actual navigation, you might need to adjust depending on your routing setup
+      onNavigateToLogin();
+    } catch (error) {
+      // Handle errors, e.g., show a user-friendly message
+      if (error.response) {
+        // Server responded with a status code outside the 2xx range
+        setError(error.response.data.message || 'Registration failed. Please try again.');
+      } else if (error.request) {
+        // The request was made but no response was received
+        setError('No response from the server. Please try again later.');
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        setError('Registration failed due to an unexpected error. Please try again.');
+      }
     }
   };
 
@@ -59,7 +65,7 @@ const RegisterForm = ({ onNavigateToLogin }) => {
             required
             fullWidth
             id="username"
-            label="Username (Email)"
+            label="Username"
             name="username"
             autoComplete="username"
             value={userDetails.username}
