@@ -14,7 +14,7 @@ const PortfolioROICard = () => {
       if (!auth.isAuthenticated) return;
 
       try {
-        const response = await authenticatedAxiosGet('/placeholder-api-endpoint-for-roi');
+        const response = await authenticatedAxiosGet('/api/user/${auth.userId}/portfolio');
         if (response.status === 200 && response.data) {
           setRoi(parseFloat(response.data.roi).toFixed(2));
         } else {
