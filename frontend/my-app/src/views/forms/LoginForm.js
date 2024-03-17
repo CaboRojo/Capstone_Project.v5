@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom'; // Assuming you're using react-router for navigation
+import { useAuth } from '../../auth/auth'; // Adjust the import path according to your project structure
 import { Card, CardContent, CardActions, TextField, Button, Typography, IconButton, InputAdornment, FormControlLabel, Checkbox, Box } from '@mui/material';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 const LoginForm = ({ onNavigateToRegister }) => {
-  const [credentials, setCredentials] = useState({ username: '', password: '' });
+  const [credentials, setCredentials] = useState({ name: '', password: '' });
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const navigate = useNavigate();
+  const auth = useAuth(); // Corrected use of useAuth hook
 
   const handleInputChange = (event) => {
     setCredentials({ ...credentials, [event.target.name]: event.target.value });
@@ -23,8 +27,8 @@ const LoginForm = ({ onNavigateToRegister }) => {
   };
 
   const validateForm = () => {
-    if (!credentials.username.trim()) {
-      setError('Username is required.');
+    if (!credentials.name.trim()) {
+      setError('name is required.');
       return false;
     }
     if (!credentials.password) {
@@ -40,24 +44,17 @@ const LoginForm = ({ onNavigateToRegister }) => {
     if (!validateForm()) return;
 
     try {
-      const response = await axios.post('/handle_login', credentials);
-      // Assuming the response contains a token
-      localStorage.setItem('authToken', response.data.token);
-      // Clear form upon successful authentication
-      setCredentials({ username: '', password: '' });
-      setRememberMe(false);
-      // Optionally navigate to a different page or show a success message
+      
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/handle_login`, credentials);
+      auth.setAuthToken(response.data.token); // Use setAuthToken from Auth hook
+      auth.setUser(response.data.userId); // Use setUser from Auth hook
+      navigate('/dashboard'); // Navigate to the dashboard or home page on successful login
     } catch (error) {
-      // Handle errors, e.g., show a user-friendly message
       if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
         setError(error.response.data.message || 'Login failed. Please try again.');
       } else if (error.request) {
-        // The request was made but no response was received
         setError('No response from the server. Please try again later.');
       } else {
-        // Something happened in setting up the request that triggered an Error
         setError('Login failed due to an unexpected error. Please try again.');
       }
     }
@@ -74,12 +71,12 @@ const LoginForm = ({ onNavigateToRegister }) => {
             margin="normal"
             required
             fullWidth
-            id="username"
-            label="Username"
-            name="username"
-            autoComplete="username"
+            id="name"
+            label="name"
+            name="name"
+            autoComplete="name"
             autoFocus
-            value={credentials.username}
+            value={credentials.name}
             onChange={handleInputChange}
           />
           <TextField
