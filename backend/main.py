@@ -1,4 +1,5 @@
-from models import db, User  # Import the database object from the models file.
+from flask.views import MethodView
+from models import db, User, Portfolio, PortfolioDetail # Import the database object from the models file.
 from functools import wraps  # Facilitates the use of decorators.
 import jwt  # Facilitates encoding, decoding, and validation of JWT tokens.
 import os  # Provides a way of using operating system dependent functionality.
@@ -8,6 +9,7 @@ import oracledb  # Additional Oracle database integration, ensure correct import
 from sqlalchemy.pool import NullPool  # Provides a NullPool implementation for SQLAlchemy.
 from flask import Flask, jsonify, request, abort
 from flask_cors import CORS  # Allows handling Cross Origin Resource Sharing (CORS), making cross-origin AJAX possible.
+from flask.views import MethodView
 from dotenv import load_dotenv
 load_dotenv()  # This loads the env variables from .env file if present
 
@@ -56,9 +58,9 @@ def get_user_id_from_token(token):
         abort(401, 'Invalid token.')  # Handle invalid token
 
 # Database Credentials and Connection String
-# These variables store the database username, password, and DSN (Data Source Name) for connecting to the Oracle database.
-# It's highly recommended to manage sensitive data like usernames and passwords securely, for example, via environment variables.
-un = 'DEVELOPER'  # Database username
+# These variables store the database name, password, and DSN (Data Source Name) for connecting to the Oracle database.
+# It's highly recommended to manage sensitive data like name and passwords securely, for example, via environment variables.
+un = 'DEVELOPER'  # Database name
 pw = 'AngeleeRiosRamon1999!'  # Database password - consider using a more secure approach for production
 dsn = "(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.eu-madrid-1.oraclecloud.com))(connect_data=(service_name=gd51c296542b64f_version3_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))"
 
@@ -77,74 +79,115 @@ app.config['SQLALCHEMY_ECHO'] = True  # cambiar en prod
 # Inicializar la base de datos con la aplicación
 db.init_app(app)
 
-
 # Helper Functions
 def hash_password(plain_text_password):
+    """Hash a plaintext password using bcrypt."""
     return bcrypt.hashpw(plain_text_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 def is_password_valid(password):
+    """Check if the provided password meets the application's complexity requirements."""
     return (len(password) >= 8 and re.search("[a-z]", password) and re.search("[A-Z]", password) 
             and re.search("[0-9]", password) and re.search("[!@#$%^&*(),.?\":{}|<>]", password))
 
 @app.route('/handle_register', methods=['POST'])
 def register():
+    """Handle user registration."""
     try:
-        username = request.json.get('username', '').strip()
+        name = request.json.get('name', '').strip()
         password = request.json.get('password', '')
 
-        # Validate presence of username and password
-        if not username or not password:
-            return jsonify({"error": "Username and password are required"}), 400
+        if not name or not password:
+            return jsonify({"error": "NAME and password are required"}), 400
 
-        # Validate password complexity
         if not is_password_valid(password):
             return jsonify({"error": "Password does not meet the complexity requirements"}), 400
 
-        # Check if username already exists
-        if User.query.filter_by(username=username).first():
-            return jsonify({"error": "Username already exists"}), 409
+        if User.query.filter_by(NAME=name).first():
+            return jsonify({"error": "NAME already exists"}), 409
 
-        # Hash the password
         hashed_password = hash_password(password)
-
-        # Create new user
-        new_user = User(username=username, hashed_password=hashed_password)
+        new_user = User(NAME=name, HASHED_PASSWORD=hashed_password)
         db.session.add(new_user)
         db.session.commit()
 
         return jsonify({"message": "User registered successfully"}), 201
     except Exception as e:
-        # Log the error for debugging purposes
-        print(e)
+        # Ideally, log this exception.
         return jsonify({"error": "An error occurred during registration"}), 500
-
+    
 @app.route('/handle_login', methods=['POST'])
 def login():
+    """Handle user login."""
     try:
-        username = request.json.get('username', '').strip()
+        name = request.json.get('name', '').strip()
         password = request.json.get('password', '')
 
-        # Validate presence of username and password
-        if not username or not password:
-            return jsonify({"error": "Username and password are required"}), 400
+        if not name or not password:
+            return jsonify({"error": "NAME and password are required"}), 400
 
-        # Fetch user by username
-        user = User.query.filter_by(username=username).first()
-        if user is None:
-            return jsonify({"error": "Invalid username or password"}), 401
+        user = User.query.filter_by(NAME=name).first()
+        if user is None or not bcrypt.checkpw(password.encode('utf-8'), user.HASHED_PASSWORD.encode('utf-8')):
+            return jsonify({"error": "Invalid NAME or password"}), 401
 
-        # Check if the provided password matches the stored hashed password
-        if not bcrypt.checkpw(password.encode('utf-8'), user.hashed_password.encode('utf-8')):
-            return jsonify({"error": "Invalid username or password"}), 401
-
-        # Login successful
         return jsonify({"message": "Login successful"}), 200
     except Exception as e:
-        # Log the error for debugging purposes
-        print(e)
+        # Ideally, log this exception.
         return jsonify({"error": "An error occurred during login"}), 500
 
 
+class UserPortfolioAPI(MethodView):
+    """
+    Fetches and returns the portfolio details for a specific user, including total value,
+    return on investment (ROI), and details of each stock within the portfolio.
+    """
+    
+    def get(self, user_id):
+        """
+        Retrieves portfolio information for a specified user ID.
+        
+        Args:
+            user_id (int): The ID of the user whose portfolio information is being requested.
+        
+        Returns:
+            A JSON response containing the portfolio details or an error message.
+        """
+        try:
+            # Fetch the user's portfolio based on the user_id. Utilize eager loading of related entities.
+            user_portfolio = Portfolio.query.options(db.joinedload(Portfolio.details)).filter_by(USERID=user_id).first()
+            
+            if not user_portfolio:
+                return jsonify({"error": "Portfolio not found."}), 404
+
+            # Compile details of each stock within the portfolio
+            stocks_details = [
+                {
+                    "symbol": detail.TICKERSYMBOL,
+                    "quantity": detail.QUANTITY,
+                    "last_closing_price": detail.LASTCLOSINGPRICE,
+                    "total_stock_value": detail.TOTALSTOCKVALUE
+                }
+                for detail in user_portfolio.details
+            ]
+
+            # Construct and return the aggregated data
+            portfolio_data = {
+                "total_portfolio_value": user_portfolio.TOTALPORTFOLIOVALUE,
+                "roi": user_portfolio.TOTALROI,
+                "stocks_details": stocks_details
+            }
+
+            return jsonify(portfolio_data)
+        except Exception as e:
+            # Log any errors encountered during the query.
+            db.session.rollback()  # Ensure any failed transactions are rolled back
+            app.logger.error(f"Error: {e}")
+            return jsonify({"error": "An error occurred fetching portfolio details."}), 500
+
+# Assuming you have a Flask app instance and have set up routing appropriately
+# Example of how you might add the view to your app:
+user_portfolio_view = UserPortfolioAPI.as_view('user_portfolio_api')
+app.add_url_rule('/api/user/<int:user_id>/portfolio', view_func=user_portfolio_view, methods=['GET'])
+
 
 if __name__ == '__main__':
-    app.run(debug=True)  # Run the app in debug mode for easy development and testing
+    app.run(debug=True, host='0.0.0.0')  # Make 
