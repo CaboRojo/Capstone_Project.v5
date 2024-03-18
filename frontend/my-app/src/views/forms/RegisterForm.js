@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useAuth } from '../../auth/auth';// Adjust the import path according to your project structure
 import { Card, CardContent, TextField, Button, Typography, Box } from '@mui/material';
+import { useNavigate } from 'react-router-dom'; // Assuming you're using react-router for navigation
 
 const RegisterForm = ({ onNavigateToLogin }) => {
   const [userDetails, setUserDetails] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
+  const navigate = useNavigate();
+  const auth = useAuth(); // Corrected use of useAuth hook
 
   const handleInputChange = (event) => {
     setUserDetails({ ...userDetails, [event.target.name]: event.target.value });
@@ -29,25 +33,19 @@ const RegisterForm = ({ onNavigateToLogin }) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
     if (!validateForm()) return;
 
     try {
-      // Here we make the Axios POST request to the registration endpoint
-      const response = await axios.post('/handle_register', userDetails);
-      // Assuming the response from the server is successful, navigate to login
-      // For actual navigation, you might need to adjust depending on your routing setup
-      onNavigateToLogin();
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/handle_register`, userDetails);
+      auth.setAuthToken(response.data.token); // Use setAuthToken from Auth hook
+      auth.setUser(response.data.userId); // Use setUser from Auth hook
+      navigate('/login'); // Navigate to login page after successful registration
     } catch (error) {
-      // Handle errors, e.g., show a user-friendly message
       if (error.response) {
-        // Server responded with a status code outside the 2xx range
         setError(error.response.data.message || 'Registration failed. Please try again.');
       } else if (error.request) {
-        // The request was made but no response was received
         setError('No response from the server. Please try again later.');
       } else {
-        // Something happened in setting up the request that triggered an Error
         setError('Registration failed due to an unexpected error. Please try again.');
       }
     }
