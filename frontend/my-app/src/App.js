@@ -1,21 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import './App.css';
-import LoginForm from './views/forms/LoginForm';
-import RegisterForm from './views/forms/RegisterForm';
+import MainRoutes from './routes/MainRoutes'; // Make sure the import path is correct
 
 function App() {
-  const [view, setView] = useState('login'); // 'login' or 'register'
-
-  const navigateToLogin = () => setView('login');
-  const navigateToRegister = () => setView('register');
-
   return (
     <div className="App">
-      {view === 'login' ? (
-        <LoginForm onNavigateToRegister={navigateToRegister} />
-      ) : (
-        <RegisterForm onNavigateToLogin={navigateToLogin} />
-      )}
+      <MainRoutes />
     </div>
   );
 }
