@@ -31,7 +31,7 @@ const PortfolioStockTickerDisplay = () => {
                   console.error("Error fetching stock data:", caughtError);
                 }
               };
-
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         fetchStockData();
     }, [auth.isAuthenticated, authenticatedAxiosGet, auth.userId]);
 
