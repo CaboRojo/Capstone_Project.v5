@@ -5,6 +5,7 @@ import Dashboard from '../views/Landing';
 import { useAuth } from '../auth/auth';
 import LoginForm from '../views/forms/LoginForm';
 import RegisterForm from '../views/forms/RegisterForm';
+import Details from '../views/Details'; 
 
 // Helper component to handle route protection
 const ProtectedRoute = ({ children }) => {
@@ -28,9 +29,9 @@ const MainRoutes = [
     element: <ProtectedRoute><MainLayout /></ProtectedRoute>,
     children: [
       { path: 'dashboard', element: <Dashboard /> },
+      { path: 'details/:symbol', element: <Details /> }, // Add this line
       // Additional protected routes can be added here
     ],
   },
 ];
-
 export default MainRoutes;

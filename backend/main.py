@@ -423,11 +423,15 @@ class AssetDetailsAPI(MethodView):
 
                 # Assuming you have a method or logic to retrieve the company name
                 # Placeholder for company_name - Ideally, replace 'Unknown' with actual logic to retrieve company names
-                company_name = "Unknown"  # This should be fetched based on the symbol if available
+                company_names = {
+                    "AAPL": "Apple Inc.",
+                    "MSFT": "Microsoft"
+                    # Add more mappings as required
+                } # This should be fetched based on the symbol if available
 
                 stocks_details.append({
                     "symbol": detail.TICKERSYMBOL,
-                    "company_name": company_name,  # Assuming you have this data
+                    "company_name": company_names.get(detail.TICKERSYMBOL, "Unknown"),
                     "quantity": detail.QUANTITY,
                     "portfolio_percentage": portfolio_percentage,
                     "last_closing_price": last_closing_price,
@@ -574,7 +578,59 @@ def buy_stocks(user_id):
     
     return add_cors_headers(result)
 
+BASE_URL = 'https://www.alphavantage.co/query'
 
 
+def get_historical_stock_data_adjusted(symbol):
+    """
+    Fetches the last 12 months of adjusted closing prices for a given stock symbol
+    using the TIME_SERIES_MONTHLY_ADJUSTED endpoint.
+    """
+    params = {
+        "function": "TIME_SERIES_MONTHLY_ADJUSTED",
+        "symbol": symbol,
+        "apikey": ALPHA_VANTAGE_API_KEY
+    }
+    
+    response = requests.get(BASE_URL, params=params)
+    if response.status_code == 200:
+        data = response.json()
+        monthly_data = data.get("Monthly Adjusted Time Series", {})
+        
+        # Extract the last 12 months of data
+        historical_data = []
+        for date_str, details in sorted(monthly_data.items(), reverse=True)[:12]:
+            date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+            formatted_date = date_obj.strftime("%b %d, %Y")
+            adjusted_close_price = details.get("5. adjusted close")
+            # convert adjusted close price to float
+            if adjusted_close_price:
+                adjusted_close_price = float(adjusted_close_price)
+            historical_data.append({
+                "date": formatted_date,
+                "adjustedClosingPrice": adjusted_close_price
+            })
+        return historical_data
+    else:
+        return None
+
+@app.route('/stocks/<symbol>/', methods=['GET', 'OPTIONS'])
+def historical_data_adjusted(symbol):
+    if request.method == 'OPTIONS':
+        # Directly create a response object for OPTIONS and add CORS headers
+        response = make_response()
+        response = add_cors_headers(response)
+        return response, 200  # Explicitly return 200 OK for OPTIONS
+
+    # Proceed as normal for GET requests
+    historical_data = get_historical_stock_data_adjusted(symbol)
+    if historical_data:
+        response = jsonify(historical_data)
+        response = add_cors_headers(response)  # Ensure CORS headers are added
+        return response, 200
+    else:
+        response = jsonify({"error": "Failed to fetch historical data"})
+        response = add_cors_headers(response)  # Ensure CORS headers are added
+        return response, 500
 if __name__ == "__main__":
     app.run(debug=True)
