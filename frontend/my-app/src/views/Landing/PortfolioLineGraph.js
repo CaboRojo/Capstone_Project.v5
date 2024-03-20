@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import axios from 'axios';
-import { useAuth } from '../../../hooks/useAuth'; // Adjust the import path as necessary
+import { useAuth } from '../../auth/auth'; // Adjust the path as necessary
 
 const PortfolioLineGraph = ({ selectedStockSymbols }) => {
   const { auth, authenticatedAxiosGet } = useAuth();
@@ -17,7 +17,7 @@ const PortfolioLineGraph = ({ selectedStockSymbols }) => {
 
       for (const symbol of selectedStockSymbols) {
         try {
-          const response = await authenticatedAxiosGet(`/api/stocks/${symbol}/historical`);
+          const response = await authenticatedAxiosGet(`stocks/${symbol}`);
           // Transform data to match chart format
           const transformedSeries = {
             name: symbol,

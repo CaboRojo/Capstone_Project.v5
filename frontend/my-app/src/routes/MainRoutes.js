@@ -1,37 +1,36 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom'; // Adjusted import for v6
+import MainLayout from '../layouts/MainLayout';
+import Dashboard from '../views/Landing';
+import { useAuth } from '../auth/auth';
 import LoginForm from '../views/forms/LoginForm';
 import RegisterForm from '../views/forms/RegisterForm';
-import MainLayout from '../layouts/MainLayout';
-// import Dashboard from '../views/Landing/Dashboard';
-import { useAuth } from '../auth/auth';
 
-const AuthenticatedRoute = ({ children }) => {
-  const auth = useAuth(); // Corrected use of useAuth hook
-  return auth.isAuthenticated ? children : <Navigate to="/login" />;
+// Helper component to handle route protection
+const ProtectedRoute = ({ children }) => {
+  const auth = useAuth();
+  console.log("ProtectedRoute auth state:", auth); // Debugging auth state
+
+  if (!auth.isAuthenticated()) {
+    // Redirect to login if not authenticated
+    return <Navigate to="/login" replace />;
+  }
+  return children;
 };
 
-const MainRoutes = () => {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<LoginForm />} />
-        <Route path="/register" element={<RegisterForm />} />
-        <Route path="/" element={<AuthenticatedRoute><MainLayout /></AuthenticatedRoute>} />
-        <Route
-          path="/"
-          element={
-            <AuthenticatedRoute>
-              <MainLayout>
-                {/* <Dashboard /> */}
-              </MainLayout>
-            </AuthenticatedRoute>
-          }
-        />
-        {/* Additional routes that should be wrapped in MainLayout go here */}
-      </Routes>
-    </Router>
-  );
-};
+// Adjusted for React Router v6 useRoutes compatibility
+const MainRoutes = [
+  { path: '/', element: <Navigate to="/dashboard" replace /> },
+  { path: 'login', element: <LoginForm /> },
+  { path: 'register', element: <RegisterForm /> },
+  {
+    path: '/', // Added path for grouping under a common path if needed
+    element: <ProtectedRoute><MainLayout /></ProtectedRoute>,
+    children: [
+      { path: 'dashboard', element: <Dashboard /> },
+      // Additional protected routes can be added here
+    ],
+  },
+];
 
 export default MainRoutes;
