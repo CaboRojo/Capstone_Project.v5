@@ -20,15 +20,14 @@ const PortfolioStockTickerDisplay = () => {
             try {
                 const response = await authenticatedAxiosGet(`assets/${auth.userId}/`);
                 console.log("Stock Data:", response.data); // Log the stock data to the console
-                if (Array.isArray(response.data)) {
-                    setStockData(response.data);
+                if (response.data && response.data.stocks_details) {
+                    setStockData(response.data.stocks_details);
                   } else {
-                    setError('Data received is not an array');
-                    console.error('Error in response data:', response.data);
+                    // If there's no data, or the structure is not as expected
+                    console.error('Unexpected response structure:', response.data);
                   }
                 } catch (error) {
-                  setError('Unable to load stock data');
-                  console.error('Error fetching stock data:', error);
+                  console.error("Error fetching stock data:", error);
                 }
               };
 

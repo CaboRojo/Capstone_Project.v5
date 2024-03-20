@@ -415,34 +415,34 @@ class AssetDetailsAPI(MethodView):
             A JSON response containing detailed asset information or an error message.
         """
         try:
-            # Use direct model query to fetch the user's portfolio and eager-load details
             portfolio = Portfolio.query.options(joinedload(Portfolio.details)).filter_by(USERID=user_id).first()
+            if not portfolio or not portfolio.TOTALPORTFOLIOVALUE:
+                return jsonify({"error": "Portfolio not found or no portfolio value."}), 404
 
-            if not portfolio:
-                return jsonify({"error": "Portfolio not found."}), 404
-
-            # Initialize an instance of the AlphaVantageAPI for fetching historical stock prices
-            alpha_vantage_api = AlphaVantageAPI(ALPHA_VANTAGE_API_KEY)
+            total_portfolio_value = portfolio.TOTALPORTFOLIOVALUE
             stocks_details = []
 
             for detail in portfolio.details:
                 # Fetch historical stock prices for each stock in the portfolio
                 historical_prices = alpha_vantage_api.get_historical_stock_prices(detail.TICKERSYMBOL)
+                
+                # Calculate the portfolio percentage for each stock
+                stock_value = detail.QUANTITY * detail.LASTCLOSINGPRICE
+                portfolio_percentage = (stock_value / total_portfolio_value) * 100 if total_portfolio_value > 0 else 0
 
                 stocks_details.append({
                     "symbol": detail.TICKERSYMBOL,
                     "quantity": detail.QUANTITY,
-                    "historical_prices": historical_prices
+                    "historical_prices": historical_prices,
+                    "portfolio_percentage": portfolio_percentage  # Add this line
                 })
 
-            # Aggregate and return detailed asset information
             response = {
-                "total_portfolio_value": portfolio.TOTALPORTFOLIOVALUE,
+                "total_portfolio_value": total_portfolio_value,
                 "stocks_details": stocks_details
             }
 
-            response = jsonify(response)
-            return add_cors_headers(response)
+            return jsonify(response), 200
         except Exception as e:
             logging.error(f"Error fetching asset details: {e}")
             response = jsonify({"error": "An error occurred fetching asset details."})
