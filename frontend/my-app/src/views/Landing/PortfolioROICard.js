@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, Typography, Box, CircularProgress, useTheme } from '@mui/material';
+import { Card, CardContent, Typography, CircularProgress, useTheme } from '@mui/material';
 import { useAuth } from '../../auth/auth'; // Adjust the path as necessary
 
 const PortfolioROICard = () => {
