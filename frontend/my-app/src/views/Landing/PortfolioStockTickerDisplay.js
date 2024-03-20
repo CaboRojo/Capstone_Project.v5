@@ -26,8 +26,9 @@ const PortfolioStockTickerDisplay = () => {
                     // If there's no data, or the structure is not as expected
                     console.error('Unexpected response structure:', response.data);
                   }
-                } catch (error) {
-                  console.error("Error fetching stock data:", error);
+                } catch (caughtError) {
+                  setError(caughtError);
+                  console.error("Error fetching stock data:", caughtError);
                 }
               };
 
@@ -63,7 +64,9 @@ const PortfolioStockTickerDisplay = () => {
 
             handleCloseBuyModal();
             // Optionally: Fetch updated stock data or trigger a global state update
-        } catch (error) {
+        } catch (caughtError) {
+            setError(caughtError);
+            console.error("Error buying button:", caughtError);
             // Handle error here if needed
         }
     };
@@ -79,7 +82,9 @@ const PortfolioStockTickerDisplay = () => {
 
             handleCloseSellModal();
             // Optionally: Fetch updated stock data or trigger a global state update
-        } catch (error) {
+        } catch (caughtError) {
+            setError(caughtError);
+            console.error("Error in selling data:", caughtError);
             // Handle error here if needed
         }
     };
