@@ -13,7 +13,6 @@ const PortfolioStockTickerDisplay = () => {
     const [sellModalOpen, setSellModalOpen] = useState(false);
     const [selectedStock, setSelectedStock] = useState(null);
     const [buyQuantity, setBuyQuantity] = useState('');
-    const [setError] = useState(null);
 
     useEffect(() => {
         const fetchStockData = async () => {
@@ -26,8 +25,7 @@ const PortfolioStockTickerDisplay = () => {
                     // If there's no data, or the structure is not as expected
                     console.error('Unexpected response structure:', response.data);
                   }
-                } catch (caughtError) {
-                  setError(caughtError);
+                } catch (error) {
                   console.error("Error fetching stock data:", caughtError);
                 }
               };
@@ -64,8 +62,7 @@ const PortfolioStockTickerDisplay = () => {
 
             handleCloseBuyModal();
             // Optionally: Fetch updated stock data or trigger a global state update
-        } catch (caughtError) {
-            setError(caughtError);
+        } catch (error) {
             console.error("Error buying button:", caughtError);
             // Handle error here if needed
         }
@@ -82,9 +79,8 @@ const PortfolioStockTickerDisplay = () => {
 
             handleCloseSellModal();
             // Optionally: Fetch updated stock data or trigger a global state update
-        } catch (caughtError) {
-            setError(caughtError);
-            console.error("Error in selling data:", caughtError);
+        } catch (error) {
+           console.error("Error in selling data:", caughtError);
             // Handle error here if needed
         }
     };
