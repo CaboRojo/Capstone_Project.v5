@@ -13,7 +13,7 @@ const PortfolioStockTickerDisplay = () => {
     const [sellModalOpen, setSellModalOpen] = useState(false);
     const [selectedStock, setSelectedStock] = useState(null);
     const [buyQuantity, setBuyQuantity] = useState('');
-    const [error, setError] = useState(null);
+    const [setError] = useState(null);
 
     useEffect(() => {
         const fetchStockData = async () => {
