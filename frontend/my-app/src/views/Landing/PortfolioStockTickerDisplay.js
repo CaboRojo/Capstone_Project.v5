@@ -26,7 +26,7 @@ const PortfolioStockTickerDisplay = () => {
                     console.error('Unexpected response structure:', response.data);
                   }
                 } catch (error) {
-                  console.error("Error fetching stock data:", caughtError);
+                  console.error("Error fetching stock data:", error);
                 }
               };
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -63,7 +63,7 @@ const PortfolioStockTickerDisplay = () => {
             handleCloseBuyModal();
             // Optionally: Fetch updated stock data or trigger a global state update
         } catch (error) {
-            console.error("Error buying button:", caughtError);
+            console.error("Error buying button:", error);
             // Handle error here if needed
         }
     };
@@ -80,7 +80,7 @@ const PortfolioStockTickerDisplay = () => {
             handleCloseSellModal();
             // Optionally: Fetch updated stock data or trigger a global state update
         } catch (error) {
-           console.error("Error in selling data:", caughtError);
+           console.error("Error in selling data:", error);
             // Handle error here if needed
         }
     };
