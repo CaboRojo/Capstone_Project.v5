@@ -107,41 +107,48 @@ const PortfolioStockTickerDisplay = () => {
     
                     {/* Stock Data */}
                     {stockData.map((stock, index) => (
-                        <React.Fragment key={index}>
-                            {/* Company Name with navigation link */}
-                            <Grid item xs={3}>
-                                <Typography variant="subtitle1">
+                    <React.Fragment key={index}>
+                        {/* Company Name with navigation link */}
+                        <Grid item xs={3}>
+                            <Typography variant="subtitle1">
                                 <Link href={`/details/${stock.symbol}`} style={{ textDecoration: 'none' }}>
-                                     {stock.symbol} - {stock.company_name}
+                                    {stock.symbol} - {stock.company_name}
                                 </Link>
-                                </Typography>
-                            </Grid>
-                                {/* Total Amount of Shares */}
-                            <Grid item xs={2}>
-                                <Typography variant="subtitle2">Total Amount of Shares: {stock.quantity}</Typography>
-                            </Grid>
-    
-                            {/* Portfolio % */}
-                            <Grid item xs={3}>
-                                <Typography variant="subtitle2">Portfolio %: {stock.portfolio_percentage.toFixed(2)}%</Typography>
-                            </Grid>
-    
-                            {/* Buy and Sell Actions */}
-                            <Grid item xs={2} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                <Button variant="outlined" onClick={() => handleOpenBuyModal(stock)}>Buy</Button>
-                                <Button variant="outlined" sx={{ ml: 1 }} onClick={() => handleOpenSellModal(stock)}>Sell</Button>
-                            </Grid>
-    
-                            {/* Last Closing Price */}
-                            <Grid item xs={2} style={{ textAlign: 'right' }}>
-                                <Typography variant="subtitle1">
-                                    {stock.last_closing_price ? `$${stock.last_closing_price.toFixed(2)}` : "Loading..."}
-                                </Typography>
-                            </Grid>
-                        </React.Fragment>
-                    ))}
-    
-                </Grid>
+                            </Typography>
+                        </Grid>
+                        {/* Total Amount of Shares */}
+                        <Grid item xs={2}>
+                            <Typography variant="subtitle2">Total Amount of Shares: {stock.quantity}</Typography>
+                        </Grid>
+
+                        {/* Portfolio % */}
+                        <Grid item xs={3}>
+                            <Typography variant="subtitle2">
+                            Portfolio %: {stock.portfolio_percentage ? (
+                            stock.portfolio_percentage.toFixed(2)
+                            ) : (
+                            "N/A"
+                            )}
+                            %
+                            </Typography>
+                        </Grid>
+
+                        {/* Buy and Sell Actions */}
+                        <Grid item xs={2} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                            <Button variant="outlined" onClick={() => handleOpenBuyModal(stock)}>Buy</Button>
+                            <Button variant="outlined" sx={{ ml: 1 }} onClick={() => handleOpenSellModal(stock)}>Sell</Button>
+                        </Grid>
+
+                        {/* Last Closing Price */}
+                        <Grid item xs={2} style={{ textAlign: 'right' }}>
+                            <Typography variant="subtitle1">
+                                {stock.last_closing_price ? `$${stock.last_closing_price.toFixed(2)}` : "Loading..."}
+                            </Typography>
+                        </Grid>
+                    </React.Fragment>
+                ))}
+
+            </Grid>
             </CardContent>
             {/* Buy and Sell Dialogs */}
             <Dialog open={buyModalOpen} onClose={handleCloseBuyModal}>

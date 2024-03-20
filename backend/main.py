@@ -1,5 +1,6 @@
 # Import necessary libraries and modules
-from models import User, Portfolio, PortfolioDetail, Transaction, Stock, db  # Imports from models.
+from models import User, Portfolio, PortfolioDetail, Transaction, Stock, db
+from decimal import Decimal  # Imports from models.
 import logging  # Facilitates logging of messages of various severity levels.
 from datetime import datetime, timedelta  # Used for handling dates and time differences.
 import re  # Enables regular expression operations.
@@ -394,47 +395,42 @@ class UserPortfolioAPI(MethodView):
 user_portfolio_view = UserPortfolioAPI.as_view('user_portfolio_api')
 app.add_url_rule('/user/<int:user_id>/', view_func=user_portfolio_view, methods=['GET', 'OPTIONS'])
 
-
-
 class AssetDetailsAPI(MethodView):
-    """
-    Fetches and returns detailed asset information for a specific user, including historical stock prices.
-    """
-     # Add an options method to handle preflight requests
     def options(self, user_id=None):
         return add_cors_headers(make_response())
 
     def get(self, user_id):
-        """
-        Retrieves detailed asset information for a specified user ID, including historical stock prices.
-
-        Args:
-            user_id (int): The ID of the user whose asset details are being requested.
-
-        Returns:
-            A JSON response containing detailed asset information or an error message.
-        """
         try:
-            portfolio = Portfolio.query.options(joinedload(Portfolio.details)).filter_by(USERID=user_id).first()
-            if not portfolio or not portfolio.TOTALPORTFOLIOVALUE:
-                return jsonify({"error": "Portfolio not found or no portfolio value."}), 404
+            portfolio = Portfolio.query.options(db.joinedload(Portfolio.details)).filter_by(USERID=user_id).first()
+            if not portfolio:
+                return jsonify({"error": "Portfolio not found."}), 404
 
             total_portfolio_value = portfolio.TOTALPORTFOLIOVALUE
             stocks_details = []
 
             for detail in portfolio.details:
-                # Fetch historical stock prices for each stock in the portfolio
-                historical_prices = alpha_vantage_api.get_historical_stock_prices(detail.TICKERSYMBOL)
-                
-                # Calculate the portfolio percentage for each stock
-                stock_value = detail.QUANTITY * detail.LASTCLOSINGPRICE
-                portfolio_percentage = (stock_value / total_portfolio_value) * 100 if total_portfolio_value > 0 else 0
+                # Use Alpha Vantage API to fetch the most recent closing price
+                last_closing_price = alpha_vantage_api.get_stock_final_price(detail.TICKERSYMBOL)
+                if last_closing_price is None:
+                    # Skip this stock if the closing price could not be fetched
+                    continue
+
+                # Calculate the value of the stock held by the user
+                stock_value = detail.QUANTITY * last_closing_price
+
+                # Calculate what percentage of the portfolio is made up by this stock
+                portfolio_percentage = (stock_value / float(total_portfolio_value)) * 100 if total_portfolio_value else 0
+
+                # Assuming you have a method or logic to retrieve the company name
+                # Placeholder for company_name - Ideally, replace 'Unknown' with actual logic to retrieve company names
+                company_name = "Unknown"  # This should be fetched based on the symbol if available
 
                 stocks_details.append({
                     "symbol": detail.TICKERSYMBOL,
+                    "company_name": company_name,  # Assuming you have this data
                     "quantity": detail.QUANTITY,
-                    "historical_prices": historical_prices,
-                    "portfolio_percentage": portfolio_percentage  # Add this line
+                    "portfolio_percentage": portfolio_percentage,
+                    "last_closing_price": last_closing_price,
                 })
 
             response = {
@@ -445,10 +441,8 @@ class AssetDetailsAPI(MethodView):
             return jsonify(response), 200
         except Exception as e:
             logging.error(f"Error fetching asset details: {e}")
-            response = jsonify({"error": "An error occurred fetching asset details."})
-            return add_cors_headers(response), 500
+            return jsonify({"error": "An error occurred fetching asset details: {str(e)}"}), 500
 
-# Creating a view function from the class
 asset_details_view = AssetDetailsAPI.as_view('asset_details_api')
 app.add_url_rule('/assets/<int:user_id>/', view_func=asset_details_view, methods=['GET', 'OPTIONS'])
 
