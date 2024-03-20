@@ -450,7 +450,7 @@ class AssetDetailsAPI(MethodView):
 
 # Creating a view function from the class
 asset_details_view = AssetDetailsAPI.as_view('asset_details_api')
-app.add_url_rule('/api/assets/<int:user_id>', view_func=asset_details_view, methods=['GET', 'OPTIONS'])
+app.add_url_rule('/assets/<int:user_id>/', view_func=asset_details_view, methods=['GET', 'OPTIONS'])
 
 class StockTransactionAPI(MethodView):
     """
@@ -545,7 +545,7 @@ class StockTransactionAPI(MethodView):
             return add_cors_headers(response), 500
 
 # Route for removing stocks from a user's portfolio
-@app.route('/users/<int:user_id>/stocks/remove', methods=['POST', 'OPTIONS'])
+@app.route('/users/<int:user_id>/remove', methods=['POST', 'OPTIONS'])
 @token_required
 def remove_stocks(user_id):
     if request.method == 'OPTIONS':

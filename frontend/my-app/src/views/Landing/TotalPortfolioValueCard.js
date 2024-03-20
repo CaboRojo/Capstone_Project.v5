@@ -13,7 +13,7 @@ const TotalPortfolioValueCard = () => {
       if (!auth.isAuthenticated) return;
 
       try {
-        const response = await authenticatedAxiosGet(`user/${auth.userId}`);
+        const response = await authenticatedAxiosGet(`user/${auth.userId}/`);
         if (response.status === 200 && response.data) {
           setTotalPortfolioValue(response.data.total_portfolio_value);
         } else {

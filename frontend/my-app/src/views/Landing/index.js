@@ -3,7 +3,7 @@ import { Grid, Container } from '@mui/material';
 import TotalPortfolioValueCard from './TotalPortfolioValueCard';
 import PortfolioROICard from './PortfolioROICard';
 // import PortfolioLineGraph from './PortfolioLineGraph';
-// import PortfolioStockTickerDisplay from './PortfolioStockTickerDisplay';
+import PortfolioStockTickerDisplay from './PortfolioStockTickerDisplay';
 
 const Dashboard = () => {
     return (
@@ -26,7 +26,7 @@ const Dashboard = () => {
 
                 {/* Stock Ticker Display */}
                 <Grid item xs={12}>
-                    {/* <PortfolioStockTickerDisplay /> */}
+                    <PortfolioStockTickerDisplay />
                 </Grid>
             </Grid>
         </Container>
